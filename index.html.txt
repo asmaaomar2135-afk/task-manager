@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>مدير المهام الذكي | Smart Task Manager</title>
+  <!-- Google Fonts & Tailwind CSS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Cairo', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center p-4 sm:p-8">
+
+  <div class="w-full max-w-xl">
+    <!-- Header -->
+    <header class="text-center mb-8">
+      <h1 class="text-3xl sm:text-4xl font-bold text-indigo-400 mb-2">📋 مدير المهام الذكي</h1>
+      <p class="text-slate-400 text-sm sm:text-base">نظم يومك، أنجز أهدافك، واحفظ مهامك بسهولة</p>
+    </header>
+
+    <!-- Input Section -->
+    <div class="bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-xl border border-slate-700 mb-6">
+      <form id="taskForm" class="flex flex-col sm:flex-row gap-3">
+        <input 
+          type="text" 
+          id="taskInput" 
+          placeholder="اكتب مهمتك الجديدة هنا..." 
+          required 
+          class="flex-1 bg-slate-900 border border-slate-700 text-slate-100 placeholder-slate-500 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 transition-colors"
+        />
+        <button 
+          type="submit" 
+          class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl transition-all shadow-md active:scale-95"
+        >
+          إضافة
+        </button>
+      </form>
+    </div>
+
+    <!-- Task List Section -->
+    <div class="bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-xl border border-slate-700">
+      <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-700">
+        <h2 class="text-lg font-bold text-slate-200">قائمة المهام</h2>
+        <span id="taskCounter" class="text-xs bg-indigo-950 text-indigo-300 font-bold px-3 py-1 rounded-full border border-indigo-800">
+          0 مهام
+        </span>
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="text-center py-8 text-slate-500">
+        <p class="text-4xl mb-2">✨</p>
+        <p>لا توجد مهام حالياً. أضف مهمة جديدة للبدء!</p>
+      </div>
+
+      <!-- List -->
+      <ul id="taskList" class="space-y-3"></ul>
+    </div>
+  </div>
+
+  <!-- JavaScript Logic -->
+  <script>
+    const taskForm = document.getElementById('taskForm');
+    const taskInput = document.getElementById('taskInput');
+    const taskList = document.getElementById('taskList');
+    const emptyState = document.getElementById('emptyState');
+    const taskCounter = document.getElementById('taskCounter');
+
+    // Load Tasks from LocalStorage
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+    function saveAndRender() {
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+      renderTasks();
+    }
+
+    function renderTasks() {
+      taskList.innerHTML = '';
+      
+      if (tasks.length === 0) {
+        emptyState.classList.remove('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+      }
+
+      taskCounter.textContent = `${tasks.length} ${tasks.length === 1 ? 'مهمة' : 'مهام'}`;
+
+      tasks.forEach((task, index) => {
+        const li = document.createElement('li');
+        li.className = `flex items-center justify-between p-3 rounded-xl border transition-all ${
+          task.completed ? 'bg-slate-900/50 border-slate-800 text-slate-500' : 'bg-slate-900 border-slate-700 text-slate-100'
+        }`;
+
+        li.innerHTML = `
+          <div class="flex items-center gap-3 overflow-hidden">
+            <input 
+              type="checkbox" 
+              ${task.completed ? 'checked' : ''} 
+              onchange="toggleTask(${index})"
+              class="w-5 h-5 accent-indigo-500 rounded cursor-pointer"
+            />
+            <span class="${task.completed ? 'line-through text-slate-500' : ''} truncate">
+              ${task.text}
+            </span>
+          </div>
+          <button 
+            onclick="deleteTask(${index})"
+            class="text-slate-500 hover:text-red-400 p-1 transition-colors"
+            title="حذف المهمة"
+          >
+            🗑️
+          </button>
+        `;
+        taskList.appendChild(li);
+      });
+    }
+
+    // Add Task
+    taskForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = taskInput.value.trim();
+      if (text) {
+        tasks.push({ text, completed: false });
+        taskInput.value = '';
+        saveAndRender();
+      }
+    });
+
+    // Toggle Complete
+    window.toggleTask = function(index) {
+      tasks[index].completed = !tasks[index].completed;
+      saveAndRender();
+    };
+
+    // Delete Task
+    window.deleteTask = function(index) {
+      tasks.splice(index, 1);
+      saveAndRender();
+    };
+
+    // Initial Render
+    renderTasks();
+  </script>
+</body>
+</html>
